@@ -8,16 +8,43 @@
 
 import UIKit
 
-class ViewController: UIViewController {
+class ViewController: UIViewController
+{
 
-    override func viewDidLoad() {
+    let textEditor = TextEditor()
+    let shadingImageEditor = ShadingImageEditor()
+    
+    override func viewDidLoad()
+    {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        
+        shadingImageEditor.addTarget(self, action: "shadingImageChange", forControlEvents: UIControlEvents.ValueChanged)
+        
+        view.addSubview(shadingImageEditor)
+        
+        view.addSubview(textEditor)
+        
+        shadingImageChange()
     }
 
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
+    func shadingImageChange()
+    {
+        textEditor.shadingImage = shadingImageEditor.image
+        
+        textEditor.createImage()
+    }
+    
+    override func viewDidLayoutSubviews()
+    {
+        shadingImageEditor.frame = CGRect(x: view.frame.width - 300,
+            y: 0,
+            width: 300,
+            height: view.frame.height)
+        
+        textEditor.frame = CGRect(x: 0,
+            y: 0,
+            width: view.frame.width - 300,
+            height: view.frame.height)
     }
 
 
