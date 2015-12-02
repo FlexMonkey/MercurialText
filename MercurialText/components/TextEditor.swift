@@ -17,12 +17,14 @@ class TextEditor: UIView
     
     let fonts = UIFont.familyNames().sort()
     
-    let heightMapFilter = CIFilter(name: "CIHeightFieldFromMask")!
-    let shadedMaterialFilter = CIFilter(name: "CIShadedMaterial")!
+    let ciContext = CIContext(EAGLContext: EAGLContext(API: EAGLRenderingAPI.OpenGLES2), options: [kCIContextWorkingColorSpace: NSNull()])
     
     var pendingUpdate = false
     
     var shadingImage: UIImage?
+    
+    let heightMapFilter = CIFilter(name: "CIHeightFieldFromMask")!
+    let shadedMaterialFilter = CIFilter(name: "CIShadedMaterial")!
     
     var isBusy = false
         {
@@ -157,17 +159,24 @@ class TextEditor: UIView
         
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0))
         {
-            self.heightMapFilter.setValue(CIImage(image: textImage),
+            let heightMapFilter = self.heightMapFilter.copy()
+            let shadedMaterialFilter = self.shadedMaterialFilter.copy()
+            
+            heightMapFilter.setValue(CIImage(image: textImage),
                 forKey: kCIInputImageKey)
             
-            self.shadedMaterialFilter.setValue(self.heightMapFilter.valueForKey(kCIOutputImageKey),
+            shadedMaterialFilter.setValue(heightMapFilter.valueForKey(kCIOutputImageKey),
                 forKey: kCIInputImageKey)
             
-            self.shadedMaterialFilter.setValue(ciShadingImage,
+            shadedMaterialFilter.setValue(ciShadingImage,
                 forKey: "inputShadingImage")
             
-            let finalImage = UIImage(CIImage: self.shadedMaterialFilter.valueForKey(kCIOutputImageKey) as! CIImage)
-                        
+            let filteredImageData = shadedMaterialFilter.valueForKey(kCIOutputImageKey) as! CIImage
+            let filteredImageRef = self.ciContext.createCGImage(filteredImageData,
+                fromRect: filteredImageData.extent)
+            
+            let finalImage = UIImage(CGImage: filteredImageRef)
+            
             dispatch_async(dispatch_get_main_queue())
             {
                 self.imageView.image = finalImage
