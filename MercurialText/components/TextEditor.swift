@@ -14,6 +14,10 @@ class TextEditor: UIView
     let fontPicker = UIPickerView()
     let imageView = UIImageView()
     
+    var shadingImage: UIImage?
+    
+    let editTextButton = UIButton()
+    
     let fonts = UIFont.familyNames().sort()
     
     let heightMapFilter = CIFilter(name: "CIHeightFieldFromMask")!
@@ -23,23 +27,28 @@ class TextEditor: UIView
     {
         super.init(frame: frame)
         
-        backgroundColor = UIColor.lightGrayColor()
+        backgroundColor = UIColor.blackColor()
         imageView.backgroundColor = UIColor.blackColor()
         
         label.textAlignment = NSTextAlignment.Center
         label.font = UIFont(name: fonts.first!, size: 300)
         label.numberOfLines = 5
         label.adjustsFontSizeToFitWidth = true
-        label.text = "FlexMonkey Mercurial Text"
+        label.text = "Flex Monkey Mercurial Text"
         
         label.textColor = UIColor.whiteColor()
         
         addSubview(label)
         addSubview(fontPicker)
         addSubview(imageView)
+        addSubview(editTextButton)
         
         fontPicker.dataSource = self
         fontPicker.delegate = self
+        fontPicker.backgroundColor = UIColor.lightGrayColor()
+        
+        editTextButton.setTitle("Edit", forState: UIControlState.Normal)
+        editTextButton.addTarget(self, action: "editTextClicked", forControlEvents: UIControlEvents.TouchDown)
     }
 
     required init?(coder aDecoder: NSCoder)
@@ -47,31 +56,26 @@ class TextEditor: UIView
         fatalError("init(coder:) has not been implemented")
     }
     
-    var shadingImage: UIImage?
     
-    override func layoutSubviews()
+    
+    func editTextClicked()
     {
-        let availableHeight = frame.height - fontPicker.intrinsicContentSize().height
+        guard let rootController = UIApplication.sharedApplication().keyWindow!.rootViewController else
+        {
+            return
+        }
         
-        label.frame = CGRect(x: 0,
-            y: 0,
-            width: frame.width,
-            height: availableHeight / 2)
-
-        imageView.frame = CGRect(x: 0,
-            y: availableHeight / 2,
-            width: frame.width,
-            height: availableHeight / 2)
+        let editTextController = UIAlertController(title: "Text", message: nil, preferredStyle: .Alert)
         
-        fontPicker.frame = CGRect(x: 0,
-            y: frame.height - fontPicker.intrinsicContentSize().height,
-            width: frame.width,
-            height: fontPicker.intrinsicContentSize().height)
+        let okAction = UIAlertAction(title: "OK", style: UIAlertActionStyle.Default, handler: nil)
         
-        fontPicker.reloadInputViews()
+        editTextController.addTextFieldWithConfigurationHandler(nil)
+        
+        editTextController.addAction(okAction)
+        
+        rootController.presentViewController(editTextController, animated: false, completion: nil)
     }
-    
-    
+  
     func createImage()
     {
         guard let shadingImage = shadingImage, ciShadingImage = CIImage(image: shadingImage) else
@@ -96,6 +100,30 @@ class TextEditor: UIView
         
         imageView.image = UIImage(CIImage: shadedMaterialFilter.valueForKey(kCIOutputImageKey) as! CIImage)
         
+    }
+    
+    // MARK: Layout stuff
+    
+    override func layoutSubviews()
+    {
+        let availableHeight = frame.height - fontPicker.intrinsicContentSize().height
+        
+        label.frame = CGRect(x: 0,
+            y: 0,
+            width: frame.width,
+            height: availableHeight)
+        
+        imageView.frame = CGRect(x: 0,
+            y: 0,
+            width: frame.width,
+            height: availableHeight)
+        
+        fontPicker.frame = CGRect(x: 0,
+            y: frame.height - fontPicker.intrinsicContentSize().height,
+            width: frame.width,
+            height: fontPicker.intrinsicContentSize().height)
+        
+        editTextButton.frame = CGRect(x: 0, y: 0, width: 200, height: 50)
     }
 }
 

@@ -66,7 +66,6 @@ class ShadingImageEditor: UIControl
     {
         super.init(frame: frame)
         
-        
         sceneKitView.layer.borderColor = UIColor.darkGrayColor().CGColor
         sceneKitView.layer.borderWidth = 1
         

@@ -23,10 +23,13 @@ class ViewController: UIViewController
         view.addSubview(shadingImageEditor)
         
         view.addSubview(textEditor)
-        
-        shadingImageChange()
     }
 
+    override func viewDidAppear(animated: Bool)
+    {
+        shadingImageChange()
+    }
+    
     func shadingImageChange()
     {
         textEditor.shadingImage = shadingImageEditor.image
@@ -36,17 +39,18 @@ class ViewController: UIViewController
     
     override func viewDidLayoutSubviews()
     {
-        shadingImageEditor.frame = CGRect(x: view.frame.width - 300,
-            y: 0,
-            width: 300,
-            height: view.frame.height)
+        let top = topLayoutGuide.length
+        let shadingImageEditorWidth = CGFloat(300)
+        
+        shadingImageEditor.frame = CGRect(x: view.frame.width - shadingImageEditorWidth,
+            y: top,
+            width: shadingImageEditorWidth,
+            height: view.frame.height - top)
         
         textEditor.frame = CGRect(x: 0,
-            y: 0,
-            width: view.frame.width - 300,
-            height: view.frame.height)
+            y: top,
+            width: view.frame.width - shadingImageEditorWidth,
+            height: view.frame.height - top)
     }
-
-
 }
 
