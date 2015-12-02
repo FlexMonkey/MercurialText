@@ -11,16 +11,34 @@ import UIKit
 class TextEditor: UIView
 {
     let imageView = UIImageView()
-    
-    var shadingImage: UIImage?
-    
+  
     let toolbar = UIToolbar()
+    let activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.WhiteLarge)
     
     let fonts = UIFont.familyNames().sort()
     
     let heightMapFilter = CIFilter(name: "CIHeightFieldFromMask")!
     let shadedMaterialFilter = CIFilter(name: "CIShadedMaterial")!
     
+    var pendingUpdate = false
+    
+    var shadingImage: UIImage?
+    
+    var isBusy = false
+        {
+        didSet
+        {
+            if isBusy
+            {
+                activityIndicator.startAnimating()
+            }
+            else
+            {
+                activityIndicator.stopAnimating()
+            }
+        }
+    }
+
     lazy var fontPicker: UIPickerView =
     {
         [unowned self] in
@@ -61,10 +79,13 @@ class TextEditor: UIView
         let editButton = UIBarButtonItem(barButtonSystemItem: .Edit, target: self, action: "editTextClicked")
         toolbar.setItems([editButton], animated: false)
         
+        activityIndicator.stopAnimating()
+        
         addSubview(label)
         addSubview(fontPicker)
         addSubview(imageView)
         addSubview(toolbar)
+        addSubview(activityIndicator)
     }
 
     required init?(coder aDecoder: NSCoder)
@@ -108,32 +129,58 @@ class TextEditor: UIView
         rootController.presentViewController(editTextController, animated: false, completion: nil)
     }
   
+
+    
     func createImage()
     {
+        guard !isBusy else
+        {
+            pendingUpdate = true
+            return
+        }
+       
         guard let shadingImage = shadingImage, ciShadingImage = CIImage(image: shadingImage) else
         {
-            print("shadingImage nil!")
-            
             return
         }
         
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: label.frame.width, height: label.frame.height), false, 1)
+        isBusy = true
         
-        label.layer.renderInContext(UIGraphicsGetCurrentContext()!)
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: self.label.frame.width,
+            height: self.label.frame.height), false, 1)
+        
+        self.label.layer.renderInContext(UIGraphicsGetCurrentContext()!)
         
         let textImage = UIGraphicsGetImageFromCurrentImageContext()
         
-        // imageView.image = textImage // TEMPRARY
-        
         UIGraphicsEndImageContext();
         
-        heightMapFilter.setValue(CIImage(image: textImage), forKey: kCIInputImageKey)
-    
-        shadedMaterialFilter.setValue(heightMapFilter.valueForKey(kCIOutputImageKey), forKey: kCIInputImageKey)
-        shadedMaterialFilter.setValue(ciShadingImage, forKey: "inputShadingImage")
-        
-        imageView.image = UIImage(CIImage: shadedMaterialFilter.valueForKey(kCIOutputImageKey) as! CIImage)
-        
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0))
+        {
+            self.heightMapFilter.setValue(CIImage(image: textImage),
+                forKey: kCIInputImageKey)
+            
+            self.shadedMaterialFilter.setValue(self.heightMapFilter.valueForKey(kCIOutputImageKey),
+                forKey: kCIInputImageKey)
+            
+            self.shadedMaterialFilter.setValue(ciShadingImage,
+                forKey: "inputShadingImage")
+            
+            let finalImage = UIImage(CIImage: self.shadedMaterialFilter.valueForKey(kCIOutputImageKey) as! CIImage)
+                        
+            dispatch_async(dispatch_get_main_queue())
+            {
+                self.imageView.image = finalImage
+                self.isBusy = false
+                
+                if self.pendingUpdate
+                {
+                    self.pendingUpdate = false
+                    
+                    self.createImage()
+                }
+            }
+        }
     }
     
     // MARK: Layout stuff
@@ -143,15 +190,14 @@ class TextEditor: UIView
         let availableHeight = frame.height - fontPicker.intrinsicContentSize().height
         let toolbarHeight = toolbar.intrinsicContentSize().height
         
-        label.frame = CGRect(x: 0,
+        let mainFrame = CGRect(x: 0,
             y: 0,
             width: frame.width,
             height: availableHeight - toolbarHeight)
         
-        imageView.frame = CGRect(x: 0,
-            y: 0,
-            width: frame.width,
-            height: availableHeight - toolbarHeight)
+        label.frame = mainFrame
+        imageView.frame = mainFrame
+        activityIndicator.frame = mainFrame
         
         fontPicker.frame = CGRect(x: 0,
             y: frame.height - fontPicker.intrinsicContentSize().height - toolbarHeight,

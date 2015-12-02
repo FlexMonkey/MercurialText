@@ -62,12 +62,21 @@ class ShadingImageEditor: UIControl
     let sceneKitView = SCNView()
     let tableView = UITableView()
     
+    var sceneChanged = false
+    
+    var image: UIImage?
+    {
+        return sceneKitView.snapshot()
+    }
+    
     override init(frame: CGRect)
     {
         super.init(frame: frame)
         
         sceneKitView.layer.borderColor = UIColor.darkGrayColor().CGColor
         sceneKitView.layer.borderWidth = 1
+        
+        sceneKitView.delegate = self
         
         addSubview(sceneKitView)
         addSubview(tableView)
@@ -138,8 +147,6 @@ class ShadingImageEditor: UIControl
         }
         
         updateSceneFromParameter(parameter)
-        
-        sendActionsForControlEvents(UIControlEvents.ValueChanged)
     }
     
     func applyAllParameters()
@@ -177,13 +184,10 @@ class ShadingImageEditor: UIControl
         case let .AdjustLightBrightness(index):
             lights[index].brightness = parameter.value
         }
+        
+        sceneChanged = true
     }
-    
-    var image: UIImage?
-    {
-        return sceneKitView.snapshot()
-    }
-    
+ 
     override func layoutSubviews()
     {
         sceneKitView.frame = CGRect(x: 0,
@@ -199,6 +203,26 @@ class ShadingImageEditor: UIControl
         tableView.separatorStyle = UITableViewCellSeparatorStyle.None
     }
     
+}
+
+// MARK: scene renderer delegate
+
+extension ShadingImageEditor: SCNSceneRendererDelegate
+{
+    func renderer(renderer: SCNSceneRenderer, didRenderScene scene: SCNScene, atTime time: NSTimeInterval)
+    {
+        guard sceneChanged else
+        {
+            return
+        }
+        
+        sceneChanged = false
+        
+        dispatch_async(dispatch_get_main_queue())
+        {
+            self.sendActionsForControlEvents(UIControlEvents.ValueChanged)
+        }
+    }
 }
 
 // MARK: table delegate
