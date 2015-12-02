@@ -21,7 +21,7 @@ class ShadingImageEditor: UIControl
   
     let parameterGroups = [
         ParameterGroup(name: "Material", parameters: [
-            Parameter(name: "Shininess", parameterFunction: .AdjustMaterialShininess, value: 0.05, minMax: MinMaxNorm)
+            Parameter(name: "Shininess", parameterFunction: .AdjustMaterialShininess, value: 0.02, minMax: MinMax(min:0.001, max: 0.25))
             ]),
         
         ParameterGroup(name: "Light 1", parameters: [
@@ -65,6 +65,10 @@ class ShadingImageEditor: UIControl
     override init(frame: CGRect)
     {
         super.init(frame: frame)
+        
+        
+        sceneKitView.layer.borderColor = UIColor.darkGrayColor().CGColor
+        sceneKitView.layer.borderWidth = 1
         
         addSubview(sceneKitView)
         addSubview(tableView)

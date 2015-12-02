@@ -24,14 +24,14 @@ class TextEditor: UIView
         super.init(frame: frame)
         
         backgroundColor = UIColor.lightGrayColor()
+        imageView.backgroundColor = UIColor.blackColor()
         
         label.textAlignment = NSTextAlignment.Center
         label.font = UIFont(name: fonts.first!, size: 300)
         label.numberOfLines = 5
         label.adjustsFontSizeToFitWidth = true
-        label.text = "ABC XYZ Xyzzy"
+        label.text = "FlexMonkey Mercurial Text"
         
-        label.backgroundColor = UIColor.blackColor()
         label.textColor = UIColor.whiteColor()
         
         addSubview(label)
@@ -81,20 +81,21 @@ class TextEditor: UIView
             return
         }
         
-        UIGraphicsBeginImageContextWithOptions(CGSize(width: label.frame.width, height: label.frame.height), true, 1)
+        UIGraphicsBeginImageContextWithOptions(CGSize(width: label.frame.width, height: label.frame.height), false, 1)
         
         label.layer.renderInContext(UIGraphicsGetCurrentContext()!)
         
-        let image = UIGraphicsGetImageFromCurrentImageContext()
+        let textImage = UIGraphicsGetImageFromCurrentImageContext()
         
         UIGraphicsEndImageContext();
         
-        heightMapFilter.setValue(CIImage(image: image), forKey: kCIInputImageKey)
-
+        heightMapFilter.setValue(CIImage(image: textImage), forKey: kCIInputImageKey)
+    
         shadedMaterialFilter.setValue(heightMapFilter.valueForKey(kCIOutputImageKey), forKey: kCIInputImageKey)
         shadedMaterialFilter.setValue(ciShadingImage, forKey: "inputShadingImage")
         
         imageView.image = UIImage(CIImage: shadedMaterialFilter.valueForKey(kCIOutputImageKey) as! CIImage)
+        
     }
 }
 
