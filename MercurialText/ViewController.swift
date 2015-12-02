@@ -18,7 +18,11 @@ class ViewController: UIViewController
     {
         super.viewDidLoad()
         
-        shadingImageEditor.addTarget(self, action: "shadingImageChange", forControlEvents: UIControlEvents.ValueChanged)
+        view.backgroundColor = UIColor.blackColor()
+        
+        shadingImageEditor.addTarget(self,
+            action: "shadingImageChange",
+            forControlEvents: UIControlEvents.ValueChanged)
         
         view.addSubview(shadingImageEditor)
         
@@ -51,6 +55,16 @@ class ViewController: UIViewController
             y: top,
             width: view.frame.width - shadingImageEditorWidth,
             height: view.frame.height - top)
+    }
+    
+    override func preferredStatusBarStyle() -> UIStatusBarStyle
+    {
+        return UIStatusBarStyle.LightContent
+    }
+    
+    override func supportedInterfaceOrientations() -> UIInterfaceOrientationMask
+    {
+        return UIInterfaceOrientationMask.Landscape
     }
 }
 
