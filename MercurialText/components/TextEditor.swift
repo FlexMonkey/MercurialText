@@ -27,7 +27,7 @@ class TextEditor: UIView
     let shadedMaterialFilter = CIFilter(name: "CIShadedMaterial")!
     
     var isBusy = false
-        {
+    {
         didSet
         {
             if isBusy
