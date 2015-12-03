@@ -28,7 +28,7 @@ To populate the table view, I've created an array of `ParameterGroup` each of wh
     }
 ```
 
-...it also has an enumeration with associated value of type ParameterFunction:
+...it also has an enumeration with associated value of type `ParameterFunction`:
 
 ```swift
     enum ParameterFunction
@@ -85,7 +85,7 @@ To access the rendered image, the editor exposes a computed property, `image`, w
 
 ## Text Editor / Renderer
 
-The view controller mediates between the shading image editor and the text editor / renderer. After the image editor dispatches the value changed action, the view controller sets the shadingImage property on the text editor instance and invokes `createImage()`:
+The view controller mediates between the shading image editor and the text editor / renderer. After the image editor dispatches the value changed action, the view controller sets the `shadingImage` property on the text editor instance and invokes `createImage()`:
 
 ```swift
     func shadingImageChange()
