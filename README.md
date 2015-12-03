@@ -126,7 +126,7 @@ Then I set the busy flag to true and create a `UIImage` of the original text fro
 
 The actual image filtering is done in a background thread to keep the user interface responsive. I create copies of my two Core Image filters, this is probably not necessary in this project, but I think is probably best practice according to this guidance from Apple:
 
-_CIContext and CIImage objects are immutable, which means each can be shared safely among threads. Multiple threads can use the same GPU or CPU CIContext object to render CIImage objects. However, this is not the case for CIFilter objects, which are mutable. A CIFilter object cannot be shared safely among threads. If your app is multithreaded, each thread must create its own CIFilter objects. Otherwise, your app could behave unexpectedly._
+> _CIContext and CIImage objects are immutable, which means each can be shared safely among threads. Multiple threads can use the same GPU or CPU CIContext object to render CIImage objects. However, this is not the case for CIFilter objects, which are mutable. A CIFilter object cannot be shared safely among threads. If your app is multithreaded, each thread must create its own CIFilter objects. Otherwise, your app could behave unexpectedly._
 
 With those copies of the two filters, I set the required values:
 
