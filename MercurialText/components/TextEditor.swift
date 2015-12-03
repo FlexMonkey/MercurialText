@@ -79,7 +79,9 @@ class TextEditor: UIView
         imageView.contentMode = UIViewContentMode.ScaleAspectFit
         
         let editButton = UIBarButtonItem(barButtonSystemItem: .Edit, target: self, action: "editTextClicked")
-        toolbar.setItems([editButton], animated: false)
+        let saveButton = UIBarButtonItem(barButtonSystemItem: .Save, target: self, action: "saveImageClicked")
+
+        toolbar.setItems([editButton, saveButton], animated: false)
         
         activityIndicator.stopAnimating()
         
@@ -131,7 +133,28 @@ class TextEditor: UIView
         rootController.presentViewController(editTextController, animated: false, completion: nil)
     }
   
-
+    func saveImageClicked()
+    {
+        guard let image = imageView.image else
+        {
+            return
+        }
+        
+        toolbar.items?.forEach
+        {
+            $0.enabled = false
+        }
+        
+        UIImageWriteToSavedPhotosAlbum(image, self, "image:didFinishSavingWithError:contextInfo:", nil) 
+    }
+    
+    func image(image: UIImage, didFinishSavingWithError error: NSError?, contextInfo:UnsafePointer<Void>)
+    {
+        toolbar.items?.forEach
+        {
+            $0.enabled = true
+        }
+    }
     
     func createImage()
     {
