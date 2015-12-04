@@ -57,6 +57,8 @@ class ShadingImageEditor: UIControl
             ])
     ]
     
+    var lightPositionWidgets = [LightPositionWidget]()
+    
     let material = SCNMaterial()
     
     let sceneKitView = SCNView()
@@ -91,6 +93,17 @@ class ShadingImageEditor: UIControl
         
         tableView.registerClass(ItemRenderer.self,
             forCellReuseIdentifier: "ItemRenderer")
+        
+        for (index, _) in lights.enumerate()
+        {
+            let lightWidget = LightPositionWidget(index: index)
+            
+            lightPositionWidgets.append(lightWidget)
+            sceneKitView.addSubview(lightWidget)
+        }
+        
+        positionLightWidgets()
+        colorLightWidgets()
     }
 
     required init?(coder aDecoder: NSCoder)
@@ -98,6 +111,30 @@ class ShadingImageEditor: UIControl
         fatalError("init(coder:) has not been implemented")
     }
  
+    func positionLightWidgets()
+    {
+        for (widget, light) in zip(lightPositionWidgets, lights)
+        {
+            let lightPosition = CGPoint(x: 300 * CGFloat((light.position.x - MinMaxXY.min) / (MinMaxXY.max - MinMaxXY.min)) - 10,
+                y: 300 - (300 * CGFloat((light.position.y - MinMaxXY.min) / (MinMaxXY.max - MinMaxXY.min))) - 10
+            )
+            
+            widget.frame = CGRect(origin: lightPosition,
+                size: CGSize(width: 20, height: 20))
+        }
+    }
+
+    func colorLightWidgets()
+    {
+        for (widget, light) in zip(lightPositionWidgets, lights)
+        {
+            widget.backgroundColor = UIColor(hue: light.hue,
+                saturation: 1,
+                brightness: light.brightness,
+                alpha: 1)
+        }
+    }
+    
     func setUpSceneKit()
     {
         sceneKitView.backgroundColor = UIColor.blackColor()
@@ -175,14 +212,18 @@ class ShadingImageEditor: UIControl
                 lights[index].position.z = Float(parameter.value)
             }
             
+            positionLightWidgets()
+            
         case .AdjustMaterialShininess:
             material.shininess = parameter.value
             
         case let .AdjustLightHue(index):
             lights[index].hue = parameter.value
+            colorLightWidgets()
             
         case let .AdjustLightBrightness(index):
             lights[index].brightness = parameter.value
+            colorLightWidgets()
         }
         
         sceneChanged = true
@@ -264,4 +305,59 @@ extension ShadingImageEditor: UITableViewDataSource
     }
 }
 
+// MARK: Light position widget
+
+class LightPositionWidget: UIView
+{
+    let label = UILabel()
+    
+    required init(index: Int)
+    {
+        super.init(frame: CGRectZero)
+        
+        layer.borderWidth = 1
+        layer.borderColor = UIColor.whiteColor().CGColor
+        
+        label.text = "\(index + 1)"
+        label.font = UIFont.boldSystemFontOfSize(12)
+        label.textColor = UIColor.darkGrayColor()
+        label.textAlignment = NSTextAlignment.Center
+        
+        addSubview(label)
+    }
+
+    required init?(coder aDecoder: NSCoder)
+    {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    override var backgroundColor:UIColor?
+    {
+        didSet
+        {
+            if let color = backgroundColor
+            {
+                var white: CGFloat = 0
+                var alpha: CGFloat = 0
+                
+                color.getWhite(&white, alpha: &alpha)
+                
+                label.textColor = white < 0.5 ?
+                    UIColor.whiteColor() :
+                    UIColor.blackColor()
+            }
+        }
+    }
+    
+    override func layoutSubviews()
+    {
+        layer.cornerRadius = min(frame.width, frame.height) / 2
+        
+        label.frame = bounds
+        
+        label.shadowColor = UIColor.whiteColor()
+        label.shadowOffset = CGSize(width: 0, height: 0)
+    }
+    
+}
 
