@@ -2,6 +2,8 @@
 ##### Embossed Type using SceneKit and CIShadedMaterial
 ##### _Companion project to http://flexmonkey.blogspot.co.uk/2015/12/mercurialtext-embossed-type-using.html_
 
+![screenshot](screen_shot.png)
+
 iOS 9 saw the introduction of two new Core Image filters for iOS, `CIHeightFieldFromMask` and `CIShadedMaterial`, which together allow developers to create a 3D embossed image from a monochrome source, such as text or line art. The source for the shading is an image of a hemisphere and it's this that defines the surface appearance. Of course, an external image can be used for shading shading, but since we have SceneKit for rendering 3D, we can use that and add some dynamism to the embossing.
 
 With that in mind, I present *MercurialText*, a proof-of-concept app that allows users to edit a source material, tweak the lighting and apply that material to user defined text in a variety of fonts. `CIShadedMaterial` does a fantastic job of generating a beautiful metallic embossed surface.
@@ -26,7 +28,7 @@ To populate the table view, I've created an array of `ParameterGroup` each of wh
     }
 ```
 
-...it also has an enumeration with associated value of type ParameterFunction:
+...it also has an enumeration with associated value of type `ParameterFunction`:
 
 ```swift
     enum ParameterFunction
@@ -83,7 +85,7 @@ To access the rendered image, the editor exposes a computed property, `image`, w
 
 ## Text Editor / Renderer
 
-The view controller mediates between the shading image editor and the text editor / renderer. After the image editor dispatches the value changed action, the view controller sets the shadingImage property on the text editor instance and invokes `createImage()`:
+The view controller mediates between the shading image editor and the text editor / renderer. After the image editor dispatches the value changed action, the view controller sets the `shadingImage` property on the text editor instance and invokes `createImage()`:
 
 ```swift
     func shadingImageChange()
