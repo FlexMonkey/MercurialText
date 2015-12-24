@@ -7,21 +7,21 @@
 //
 
 import UIKit
+import GLKit
 
 class TextEditor: UIView
 {
-    let imageView = UIImageView()
+    let imageView: GLKView
   
     let toolbar = UIToolbar()
     let activityIndicator = UIActivityIndicatorView(activityIndicatorStyle: UIActivityIndicatorViewStyle.WhiteLarge)
     
     let fonts = UIFont.familyNames().sort()
-    
-    let ciContext = CIContext(EAGLContext: EAGLContext(API: EAGLRenderingAPI.OpenGLES2), options: [kCIContextWorkingColorSpace: NSNull()])
-    
+
     var pendingUpdate = false
     
     var shadingImage: UIImage?
+    var filteredImageData: CIImage?
     
     let heightMapFilter = CIFilter(name: "CIHeightFieldFromMask")!
     let shadedMaterialFilter = CIFilter(name: "CIShadedMaterial")!
@@ -41,6 +41,13 @@ class TextEditor: UIView
         }
     }
 
+    lazy var ciContext: CIContext =
+    {
+        [unowned self] in
+        
+        return CIContext(EAGLContext: self.imageView.context, options: [kCIContextWorkingColorSpace: NSNull()])
+    }()
+    
     lazy var fontPicker: UIPickerView =
     {
         [unowned self] in
@@ -72,7 +79,11 @@ class TextEditor: UIView
    
     override init(frame: CGRect)
     {
+        imageView = GLKView(frame: frame, context: EAGLContext(API: .OpenGLES2))
+        
         super.init(frame: frame)
+
+        imageView.delegate = self
         
         backgroundColor = UIColor.blackColor()
         imageView.backgroundColor = UIColor.blackColor()
@@ -135,7 +146,7 @@ class TextEditor: UIView
   
     func saveImageClicked()
     {
-        guard let image = imageView.image else
+        guard let filteredImageData = filteredImageData else
         {
             return
         }
@@ -145,7 +156,9 @@ class TextEditor: UIView
             $0.enabled = false
         }
         
-        UIImageWriteToSavedPhotosAlbum(image, self, "image:didFinishSavingWithError:contextInfo:", nil) 
+        let cgImage = ciContext.createCGImage(filteredImageData, fromRect: filteredImageData.extent)
+        
+        UIImageWriteToSavedPhotosAlbum(UIImage(CGImage: cgImage), self, "image:didFinishSavingWithError:contextInfo:", nil)
     }
     
     func image(image: UIImage, didFinishSavingWithError error: NSError?, contextInfo:UnsafePointer<Void>)
@@ -194,23 +207,11 @@ class TextEditor: UIView
             shadedMaterialFilter.setValue(ciShadingImage,
                 forKey: "inputShadingImage")
             
-            let filteredImageData = shadedMaterialFilter.valueForKey(kCIOutputImageKey) as! CIImage
-            let filteredImageRef = self.ciContext.createCGImage(filteredImageData,
-                fromRect: filteredImageData.extent)
-            
-            let finalImage = UIImage(CGImage: filteredImageRef)
+            self.filteredImageData = shadedMaterialFilter.valueForKey(kCIOutputImageKey) as? CIImage
             
             dispatch_async(dispatch_get_main_queue())
             {
-                self.imageView.image = finalImage
-                self.isBusy = false
-                
-                if self.pendingUpdate
-                {
-                    self.pendingUpdate = false
-                    
-                    self.createImage()
-                }
+                self.imageView.setNeedsDisplay()
             }
         }
     }
@@ -240,6 +241,30 @@ class TextEditor: UIView
             y: frame.height - toolbarHeight,
             width: frame.width,
             height: toolbarHeight)
+    }
+}
+
+extension TextEditor: GLKViewDelegate
+{
+    func glkView(view: GLKView, drawInRect rect: CGRect)
+    {
+        guard let filteredImageData = filteredImageData else
+        {
+            return
+        }
+        
+        ciContext.drawImage(filteredImageData,
+            inRect: CGRect(x: 0, y: 0, width: imageView.drawableWidth, height: imageView.drawableHeight),
+            fromRect: filteredImageData.extent)
+        
+        isBusy = false
+        
+        if pendingUpdate
+        {
+            pendingUpdate = false
+            
+            createImage()
+        }
     }
 }
 
